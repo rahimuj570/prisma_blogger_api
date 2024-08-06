@@ -1,11 +1,18 @@
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from 'express';
 import { prismaClient } from "..";
 import { compareSync, hashSync } from 'bcrypt';
 import * as jwt from "jsonwebtoken";
 import { JWT_SECRET } from "../secret";
-import { Optional } from "@prisma/client/runtime/library";
+import { SignUpSchema } from "../schemas/user";
+import { BadRequestException } from '../exceptions/badRequest';
+import { ErrorCodes } from '../exceptions/customError';
 
-export const signup = async(req:Request,res:Response)=>{
+let checkInput=async(req:Request)=>{
+    SignUpSchema.parse(req.body);
+}
+
+export const signup = async(req:Request,res:Response, next:NextFunction)=>{
+    await checkInput(req);
     let {user_name, user_email,user_password} = req.body;
     let user = await prismaClient.user.findFirst({
         where:{
@@ -13,16 +20,17 @@ export const signup = async(req:Request,res:Response)=>{
         }
     })
     if(user){
-        throw Error("User already exist");
+        next(new BadRequestException("User Already Exist!",ErrorCodes.EMAIL_ALREADY_EXIST))
+    }else{
+        user = await prismaClient.user.create({
+            data:{
+                user_name,
+                user_email,
+                "user_password": hashSync(user_password,10)
+            }
+        })
+        res.json(user);
     }
-    user = await prismaClient.user.create({
-        data:{
-            user_name,
-            user_email,
-            "user_password": hashSync(user_password,10)
-        }
-    })
-    res.json(user);
 }
 
 interface responseLogin{
