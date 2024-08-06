@@ -3,7 +3,7 @@ import { prismaClient } from "..";
 import { compareSync, hashSync } from 'bcrypt';
 import * as jwt from "jsonwebtoken";
 import { JWT_SECRET } from "../secret";
-import { SignUpSchema } from "../schemas/user";
+import { LoginSchema, SignUpSchema } from "../schemas/user";
 import { BadRequestException } from '../exceptions/badRequest';
 import { ErrorCodes } from '../exceptions/customError';
 
@@ -40,7 +40,8 @@ interface responseLogin{
     user_password:String
 }
 
-export const login = async(req:Request,res:Response)=>{
+export const login = async(req:Request,res:Response, next:NextFunction)=>{
+    LoginSchema.parse(req.body)
     let {user_email,user_password} = req.body;
     let user = await prismaClient.user.findFirst({
         where:{
@@ -48,13 +49,29 @@ export const login = async(req:Request,res:Response)=>{
         }
     })
     if(!user){
-        throw Error("User not exist");
-    }
-    if(compareSync(user_password,user.user_password)){
-        const token = jwt.sign({"user_id":user.user_id},JWT_SECRET!)
-        delete (user as Partial<responseLogin>).user_password;
-        res.json({...user,"jwt_token":token});
+        next(new BadRequestException("User Not Found!",ErrorCodes.USER_NOT_FOUND))
     }else{
-        throw Error("Incorrect password")
+        if(compareSync(user_password,user.user_password)){
+            const token = jwt.sign({"user_id":user.user_id},JWT_SECRET!)
+            delete (user as Partial<responseLogin>).user_password;
+            res.cookie("current_user",user,{
+                expires:new Date(Date.now()+24*60*60*1000),
+                httpOnly:true
+            })
+            res.json({...user,"jwt_token":token});
+        }else{
+            next(new BadRequestException("Incorrect Password!",ErrorCodes.INCORRECT_PASSWORD))
+        }
     }
+}
+
+export const logout=(req:Request,res:Response,next:NextFunction)=>{
+    res.clearCookie("current_user");
+    res.json({
+        "log_out status":true
+    })
+}
+
+export const me=(req:Request, res:Response, next:NextFunction)=>{
+    res.json({...req.cookies.current_user,"jwt":req.headers.authorization})
 }
