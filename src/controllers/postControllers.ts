@@ -3,6 +3,8 @@ import { prismaClient } from "..";
 import { PostSchema } from '../schemas/post';
 import { Post, Prisma, PrismaClient, Tag } from "@prisma/client";
 import { InternalException } from "../exceptions/internalException";
+import { BadRequestException } from "../exceptions/badRequest";
+import { ErrorCodes } from "../exceptions/customError";
 
 export const createPost= async(req:Request, res:Response, next:NextFunction)=>{
     //PostSchema.parse(req.body);
@@ -79,4 +81,21 @@ export const createPost= async(req:Request, res:Response, next:NextFunction)=>{
         } catch (err) {
         next(new InternalException("Database Error! (-_-) Try Again!",err))
       }
+}
+
+export const deletePost=async(req:Request,res:Response,next:NextFunction)=>{
+    const post_id = req.params.post_id;
+    if(!post_id){
+        next(new BadRequestException("Post Id is missing!", ErrorCodes.INVALID_INPUT))
+    }else{
+        await prismaClient.post.delete({
+            where:{
+                post_id:+post_id
+            }
+        })
+        res.json({
+            post_id:post_id,
+            delete_status:'success'
+        })
+    }
 }
