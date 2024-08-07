@@ -13,11 +13,64 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum UserRole {
+  ADMIN
+  USER
+}
+
 model User {
-  user_id       Int    @id @default(autoincrement())
+  user_id       Int      @id @default(autoincrement())
   user_name     String
-  user_email    String @unique
+  user_email    String   @unique
   user_password String
+  user_role     UserRole @default(USER)
+  post          Post[]
 
   @@map("users")
+}
+
+model Post {
+  post_id      Int              @id @default(autoincrement())
+  post_title   String
+  post_content String           @db.Text
+  tag          PostOnTag[]
+  category     PostOnCategory[]
+  user         User             @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+  user_id      Int
+
+  @@map("posts")
+}
+
+model Tag {
+  tag_id   Int         @id @default(autoincrement())
+  tag_name String
+  post     PostOnTag[]
+
+  @@map("tags")
+}
+
+model Category {
+  category_id   Int              @id @default(autoincrement())
+  category_name String
+  post          PostOnCategory[]
+
+  @@map("categories")
+}
+
+model PostOnTag {
+  post    Post @relation(fields: [post_id], references: [post_id], onDelete: Cascade)
+  post_id Int
+  tag     Tag  @relation(fields: [tag_id], references: [tag_id], onDelete: Cascade)
+  tag_id  Int
+
+  @@id([post_id, tag_id])
+}
+
+model PostOnCategory {
+  post        Post     @relation(fields: [post_id], references: [post_id], onDelete: Cascade)
+  post_id     Int
+  category    Category @relation(fields: [category_id], references: [category_id], onDelete: Cascade)
+  category_id Int
+
+  @@id([post_id, category_id])
 }

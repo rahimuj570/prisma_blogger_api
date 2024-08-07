@@ -1,7 +1,7 @@
 import { Request, Router  } from "express";
 import { login, logout, me, signup } from "../controllers/authController";
 import { errorHandler } from '../errorHandler';
-import { authMiddleware } from "../middlewares/authMiddleware";
+import { adminMiddleWare, authMiddleware } from "../middlewares/authMiddleware";
 const authRouter:Router = Router();
 
 authRouter.post("/signup",errorHandler(signup))

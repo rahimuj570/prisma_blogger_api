@@ -68,10 +68,10 @@ export const login = async(req:Request,res:Response, next:NextFunction)=>{
 export const logout=(req:Request,res:Response,next:NextFunction)=>{
     res.clearCookie("current_user");
     res.json({
-        "log_out status":true
+        "logout_status":true
     })
 }
 
 export const me=(req:Request, res:Response, next:NextFunction)=>{
-    res.json({...req.cookies.current_user,"jwt":req.headers.authorization})
+    res.json({...req.cookies.current_user})
 }

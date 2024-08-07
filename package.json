@@ -11,13 +11,12 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@prisma/client": "^5.17.0",
+    "@prisma/client": "^5.18.0",
     "bcrypt": "^5.1.1",
     "cookie-parser": "^1.4.6",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
     "jsonwebtoken": "^9.0.2",
-    "prisma": "^5.17.0",
     "typescript": "^5.5.4",
     "zod": "^3.23.8"
   },
@@ -28,6 +27,7 @@
     "@types/jsonwebtoken": "^9.0.6",
     "@types/node": "^22.1.0",
     "nodemon": "^3.1.4",
+    "prisma": "^5.18.0",
     "ts-node": "^10.9.2"
   }
 }

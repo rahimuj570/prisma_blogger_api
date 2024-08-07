@@ -26,12 +26,8 @@ export const authMiddleware= async(req:Request, res:Response, next:NextFunction)
                         user_id: payload.user_id
                     }
                 })
-                if(user){
+                if(user && user.user_id===req.cookies.current_user.user_id){
                     delete (user as any)['user_password']
-                    res.cookie("current_user",user,{
-                        expires:new Date(Date.now()+24*60*60*1000),
-                        httpOnly:true
-                    })
                     next()
                 }else{
                     next(new JwtException("Invalid JWT",ErrorCodes.INVALID_JWT,null));
@@ -42,4 +38,13 @@ export const authMiddleware= async(req:Request, res:Response, next:NextFunction)
 
         }
     }
+}
+
+export const adminMiddleWare=(req:Request, res:Response,next:NextFunction)=>{
+    if(req.cookies.current_user){
+        if(req.cookies.current_user.user_role=="ADMIN"){
+            next()
+        }
+    }
+    next(new UnauthorizedException())
 }
