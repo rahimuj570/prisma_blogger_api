@@ -232,3 +232,32 @@ export const updatePost=async(req:Request, res:Response, next:NextFunction)=>{
     }
     }
 }
+
+export const showAllPost=async(req:Request,res:Response,next:NextFunction)=>{
+    const quantity = req.query['quantity']?+req.query['quantity']!:10;
+    const skip= req.query['page']?+req.query['page']!:1;
+    const totalPost = !req.query['user']?await prismaClient.post.count():await prismaClient.post.count({where:{user_id:+req.query.user!}});
+    let  allPosts: any;
+    if(!req.query['user']){
+    allPosts=await prismaClient.post.findMany({
+        skip:(skip!-1)*quantity,
+        take:quantity!
+      })}else{
+        allPosts=await prismaClient.post.findMany({
+            where:{
+                user_id:+req.query.user!
+            },
+            skip:(skip!-1)*quantity,
+            take:quantity!
+          })
+      }
+
+    const finalResult ={
+        allPosts,
+        _total_post:totalPost,
+        _total_page:Math.ceil(totalPost/quantity),
+        _current_page:skip,
+        _per_page_quantity:quantity
+    }
+    res.json(finalResult);
+}
